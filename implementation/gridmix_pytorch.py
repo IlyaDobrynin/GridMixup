@@ -40,6 +40,8 @@ class GridMixAugLoss(nn.Module):
         if isinstance(self.crop_aspect_ratio, float):
             self.crop_aspect_ratio = (self.crop_aspect_ratio, self.crop_aspect_ratio)
 
+        self.loss = nn.CrossEntropyLoss()
+
     def __str__(self):
         return "gridmix"
 
@@ -163,6 +165,6 @@ class GridMixAugLoss(nn.Module):
 
     def forward(self, preds: torch.Tensor, trues: torch.Tensor):
         lam = trues[-1, :][0].float()
-        trues1, trues2 = trues[0, :].long(), trues[1, :].long()
+        trues1, trues2 = torch.squeeze(trues[0, :], dim=-1).long(), torch.squeeze(trues[1, :], dim=-1).long()
         loss = self.loss(preds, trues1) * lam + self.loss(preds, trues2) * (1 - lam)
         return loss
