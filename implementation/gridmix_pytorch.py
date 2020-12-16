@@ -159,12 +159,11 @@ class GridMixAugLoss(nn.Module):
 
         # Prepare out labels
         lam_list = torch.from_numpy(np.ones(shape=targets.shape) * lam).to(targets.device)
-        out_targets = torch.cat([targets, shuffled_targets, lam_list], dim=1).transpose(0, 1).unsqueeze(-1)
-
+        out_targets = torch.cat([targets, shuffled_targets, lam_list], dim=1).transpose(0, 1)
         return images, out_targets
 
     def forward(self, preds: torch.Tensor, trues: torch.Tensor):
-        lam = trues[-1, :][0].float()
-        trues1, trues2 = torch.squeeze(trues[0, :], dim=-1).long(), torch.squeeze(trues[1, :], dim=-1).long()
+        lam = trues[-1][0].float()
+        trues1, trues2 = trues[0].long(), trues[1].long()
         loss = self.loss(preds, trues1) * lam + self.loss(preds, trues2) * (1 - lam)
         return loss
