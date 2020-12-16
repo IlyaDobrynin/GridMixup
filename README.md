@@ -1,4 +1,4 @@
-# GridMix
+# GridMixup
 A GridMixup augmentation, inspired by GridMask and CutMix
 
 ## Overview
