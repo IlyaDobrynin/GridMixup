@@ -5,16 +5,16 @@ import torch
 from torch import nn
 
 
-class GridMixAugLoss(nn.Module):
-    """ Implementation of GridMix loss
+class GridMixupLoss(nn.Module):
+    """ Implementation of GridMixup loss
 
     :param alpha: Percent of the first image on the crop. Can be float or Tuple[float, float]
                     - if float: lambda parameter gets from the beta-dictribution np.random.beta(alpha, alpha)
                     - if Tuple[float, float]: lambda parameter gets from the uniform distribution np.random.uniform(alpha[0], alpha[1])
     :param n_holes_x: Number of holes by OX
-    :param hole_aspect_ratio: hole_ in grid
-    :param crop_area_ratio: Percentage of the hole in crop
-    :param crop_aspect_ratio:
+    :param hole_aspect_ratio: hole aspect ratio
+    :param crop_area_ratio: Define persentage of the crop area
+    :param crop_aspect_ratio: Define crop aspect ratio
     """
     def __init__(
             self,
@@ -43,7 +43,7 @@ class GridMixAugLoss(nn.Module):
         self.loss = nn.CrossEntropyLoss()
 
     def __str__(self):
-        return "gridmix"
+        return "gridmixup"
 
     @staticmethod
     def _get_random_crop(height: int, crop_height: int, width: int, crop_width: int) -> t.Tuple:
@@ -73,7 +73,7 @@ class GridMixAugLoss(nn.Module):
         :param crop_aspect_ratio: Aspect ratio of the crop
         :param nx: Amount of holes by width
         :param ar: Aspect ratio of the hole
-        :return:
+        :return: Binary mask, where holes == 1, background == 0
         """
         img_height, img_width = image_shape
         crop_area = int(img_height * img_width * crop_area_ratio)
