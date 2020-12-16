@@ -9,11 +9,11 @@ class GridMixupLoss(nn.Module):
     """ Implementation of GridMixup loss
 
     :param alpha: Percent of the first image on the crop. Can be float or Tuple[float, float]
-                    - if float: lambda parameter gets from the beta-dictribution np.random.beta(alpha, alpha)
+                    - if float: lambda parameter gets from the beta-distribution np.random.beta(alpha, alpha)
                     - if Tuple[float, float]: lambda parameter gets from the uniform distribution np.random.uniform(alpha[0], alpha[1])
     :param n_holes_x: Number of holes by OX
     :param hole_aspect_ratio: hole aspect ratio
-    :param crop_area_ratio: Define persentage of the crop area
+    :param crop_area_ratio: Define percentage of the crop area
     :param crop_aspect_ratio: Define crop aspect ratio
     """
     def __init__(
@@ -86,7 +86,9 @@ class GridMixupLoss(nn.Module):
             crop_width=width
         )
         if not 1 <= nx <= width // 2:
-            raise ValueError("The hole_number_x must be between 1 and image width//2.")
+            raise ValueError(
+                f"The hole_number_x must be between 1 and {width // 2}."
+            )
         patch_width = width // nx
         patch_height = int(patch_width * ar)
 

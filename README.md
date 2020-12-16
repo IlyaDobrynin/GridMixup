@@ -1,4 +1,4 @@
-# GridMix
+# GridMixup
 A GridMixup augmentation, inspired by GridMask and CutMix
 
 ## Overview
@@ -6,6 +6,8 @@ This simple augmentation is inspired by the GridMask (https://arxiv.org/abs/2001
 The combination of this two augmentations form the proposed method.
 
 ### Example
+Simple examples are here: [demo](examples/demo.ipynb) and [pipeline demo](examples/simple_train_demo.ipynb)
+
 **Before**<br>
 ![](images/img.png)<br>
 
