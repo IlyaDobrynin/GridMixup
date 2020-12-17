@@ -8,6 +8,21 @@ The combination of this two augmentations forms proposed method.
 ### Example
 Simple examples are here: [demo](examples/demo.ipynb) and [pipeline demo](examples/simple_train_demo.ipynb)
 
+TlDr:
+```
+gridmix_cls = GridMixupLoss(
+    alpha=(0.4, 0.7),
+    hole_aspect_ratio=1.,
+    crop_area_ratio=(0.5, 1),
+    crop_aspect_ratio=(0.5, 2),
+    n_holes_x=(2, 6)
+)
+images, targets = batch['images'], batch['targets']
+images_mixed, targets_mixed = gridmix_cls.get_sample(images=images, targets=targets)
+preds = model(images_mixed)
+loss = criterion(preds, targets_mixed) 
+```
+
 **Before**<br>
 ![](images/img.png)<br>
 
