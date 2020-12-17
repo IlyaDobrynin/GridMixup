@@ -1,6 +1,7 @@
 import typing as t
 import random
 import numpy as np
+import math
 import torch
 from torch import nn
 
@@ -10,7 +11,8 @@ class GridMixupLoss(nn.Module):
 
     :param alpha: Percent of the first image on the crop. Can be float or Tuple[float, float]
                     - if float: lambda parameter gets from the beta-distribution np.random.beta(alpha, alpha)
-                    - if Tuple[float, float]: lambda parameter gets from the uniform distribution np.random.uniform(alpha[0], alpha[1])
+                    - if Tuple[float, float]: lambda parameter gets from the uniform
+                        distribution np.random.uniform(alpha[0], alpha[1])
     :param n_holes_x: Number of holes by OX
     :param hole_aspect_ratio: hole aspect ratio
     :param crop_area_ratio: Define percentage of the crop area
@@ -46,15 +48,19 @@ class GridMixupLoss(nn.Module):
         return "gridmixup"
 
     @staticmethod
-    def _get_random_crop(height: int, crop_height: int, width: int, crop_width: int) -> t.Tuple:
-        h_start = random.random()
-        w_start = random.random()
-        y1 = int((height - crop_height) * h_start)
+    def _get_random_crop(height: int, width: int, crop_area_ratio: float, crop_aspect_ratio: float) -> t.Tuple:
+        crop_area = int(height * width * crop_area_ratio)
+        crop_width = int(np.sqrt(crop_area / crop_aspect_ratio))
+        crop_height = int(crop_width * crop_aspect_ratio)
+
+        cx = np.random.random()
+        cy = np.random.random()
+
+        y1 = int((height - crop_height) * cy)
         y2 = y1 + crop_height
-        x1 = int((width - crop_width) * w_start)
+        x1 = int((width - crop_width) * cx)
         x2 = x1 + crop_width
-        box = (x1, y1, x2, y2)
-        return box
+        return x1, y1, x2, y2
 
     def _get_gridmask(
             self,
@@ -76,21 +82,27 @@ class GridMixupLoss(nn.Module):
         :return: Binary mask, where holes == 1, background == 0
         """
         img_height, img_width = image_shape
-        crop_area = int(img_height * img_width * crop_area_ratio)
-        width = int(np.sqrt(crop_area / crop_aspect_ratio))
-        height = int(width * crop_aspect_ratio)
+
+        # Get coordinates of random box
         xc1, yc1, xc2, yc2 = self._get_random_crop(
             height=img_height,
-            crop_height=height,
             width=img_width,
-            crop_width=width
+            crop_area_ratio=crop_area_ratio,
+            crop_aspect_ratio=crop_aspect_ratio
         )
+        height = yc2 - yc1
+        width = xc2 - xc1
+
         if not 1 <= nx <= width // 2:
             raise ValueError(
-                f"The hole_number_x must be between 1 and {width // 2}."
+                f"The nx must be between 1 and {width // 2}.\n"
+                f"Give: {nx}"
             )
-        patch_width = width // nx
+
+        # Get patch width, height and ny
+        patch_width = math.ceil(width / nx)
         patch_height = int(patch_width * ar)
+        ny = math.ceil(height / patch_height)
 
         # Calculate ratio of the hole - percent of hole pixels in the patch
         ratio = np.sqrt(1 - lam)
@@ -105,8 +117,8 @@ class GridMixupLoss(nn.Module):
 
         # Make grid mask
         holes = []
-        for i in range(width // patch_width + 1):
-            for j in range(height // patch_height + 1):
+        for i in range(nx + 1):
+            for j in range(ny + 1):
                 x1 = min(patch_width * i, width)
                 y1 = min(patch_height * j, height)
                 x2 = min(x1 + hole_width, width)
@@ -164,7 +176,7 @@ class GridMixupLoss(nn.Module):
         out_targets = torch.cat([targets, shuffled_targets, lam_list], dim=1).transpose(0, 1)
         return images, out_targets
 
-    def forward(self, preds: torch.Tensor, trues: torch.Tensor):
+    def forward(self, preds: torch.Tensor, trues: torch.Tensor) -> torch.Tensor:
         lam = trues[-1][0].float()
         trues1, trues2 = trues[0].long(), trues[1].long()
         loss = self.loss(preds, trues1) * lam + self.loss(preds, trues2) * (1 - lam)
