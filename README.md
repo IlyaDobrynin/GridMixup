@@ -1,15 +1,24 @@
 # GridMixup
 A GridMixup augmentation, inspired by GridMask and CutMix
 
+##  Easy install
+`pip install git+https://github.com/IlyaDobrynin/GridMixup.git`
+
 ## Overview
 This simple augmentation is inspired by the [GridMask](https://arxiv.org/abs/2001.04086) and [CutMix](https://arxiv.org/abs/1905.04899) augmentations.
 The combination of this two augmentations forms proposed method.
 
 ### Example
+To run simple examples notebooks, you should install requirements:
+```
+pip install -r requirements.txt
+```
 Simple examples are here: [demo](examples/demo.ipynb) and [pipeline demo](examples/simple_train_demo.ipynb)
 
 TlDr:
 ```
+from gridmix import GridMixupLoss
+
 gridmix_cls = GridMixupLoss(
     alpha=(0.4, 0.7),
     hole_aspect_ratio=1.,
@@ -17,6 +26,7 @@ gridmix_cls = GridMixupLoss(
     crop_aspect_ratio=(0.5, 2),
     n_holes_x=(2, 6)
 )
+
 images, targets = batch['images'], batch['targets']
 images_mixed, targets_mixed = gridmix_cls.get_sample(images=images, targets=targets)
 preds = model(images_mixed)
